@@ -59,7 +59,8 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...userData, 
       id, 
-      lastLogin: now
+      lastLogin: now,
+      picture: userData.picture || null // Ensure picture is string | null, not undefined
     };
     
     this.users.set(id, user);

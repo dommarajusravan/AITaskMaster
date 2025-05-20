@@ -24,7 +24,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const queryClient = useQueryClient();
   const [authState, setAuthState] = useState<AuthState>(initialAuthState);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<{
+    isAuthenticated: boolean;
+    user: User | null;
+  }>({
     queryKey: ['/api/auth/user'],
     retry: false,
   });

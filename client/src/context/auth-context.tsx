@@ -56,11 +56,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   useEffect(() => {
-    if (!isLoading && data) {
+    if (!isLoading) {
       setAuthState({
-        isAuthenticated: data.isAuthenticated || false,
+        isAuthenticated: data?.isAuthenticated || false,
         isLoading: false,
-        user: data.user || null,
+        user: data?.user || null,
       });
     }
   }, [data, isLoading]);

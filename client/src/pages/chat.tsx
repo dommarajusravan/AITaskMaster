@@ -28,18 +28,25 @@ const Chat: React.FC = () => {
   // Create a new conversation if none exists
   useEffect(() => {
     const initChat = async () => {
-      if (isAuthenticated && !authLoading && conversations) {
-        // If there are no conversations or no active conversation set
-        if (conversations.length === 0 || !activeConversationId) {
-          if (conversations.length > 0) {
-            // Use the most recent conversation
-            setActiveConversationId(conversations[0].id);
-          } else {
-            // Create a new conversation
-            const newConversationId = await createConversation('New Conversation');
-            setActiveConversationId(newConversationId);
-          }
+      if (!isAuthenticated || authLoading) return;
+      
+      try {
+        // If we already have an active conversation, don't do anything
+        if (activeConversationId) return;
+        
+        // If we have conversations, set the first one as active
+        if (conversations && conversations.length > 0) {
+          setActiveConversationId(conversations[0].id);
+          return;
         }
+        
+        // Otherwise create a new conversation
+        const newConversation = await createConversation('New Conversation');
+        if (newConversation && typeof newConversation === 'number') {
+          setActiveConversationId(newConversation);
+        }
+      } catch (error) {
+        console.error('Failed to initialize chat:', error);
       }
     };
 

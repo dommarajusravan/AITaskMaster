@@ -60,7 +60,7 @@ export class MemStorage implements IStorage {
       ...userData, 
       id, 
       lastLogin: now,
-      picture: userData.picture || null // Ensure picture is string | null, not undefined
+      picture: userData.picture || "" // Ensure picture is a string
     };
     
     this.users.set(id, user);

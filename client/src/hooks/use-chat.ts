@@ -1,30 +1,40 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { Message } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import * as api from '@/lib/api';
 
-export const useChat = (conversationId: number) => {
+export const useChat = (conversationId: number | null) => {
   const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Only fetch messages if we have a valid conversation ID
+  const isValidConversationId = conversationId !== null && !isNaN(Number(conversationId));
+  
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ['/api/conversations', conversationId, 'messages'],
-    enabled: !!conversationId,
+    queryFn: () => {
+      if (!isValidConversationId) return [];
+      return api.getMessages(conversationId as number);
+    },
+    enabled: isValidConversationId,
   });
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      return await apiRequest('POST', `/api/conversations/${conversationId}/messages`, {
-        content: message,
-      });
+      if (!isValidConversationId) {
+        throw new Error('Invalid conversation ID');
+      }
+      return await api.sendMessage(conversationId as number, message);
     },
     onMutate: () => {
       setIsTyping(true);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/conversations', conversationId, 'messages'] });
+      if (isValidConversationId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/conversations', conversationId, 'messages'] });
+      }
     },
     onError: (error) => {
       toast({
@@ -41,15 +51,15 @@ export const useChat = (conversationId: number) => {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!content.trim()) return;
+      if (!content.trim() || !isValidConversationId) return;
       await sendMessageMutation.mutateAsync(content);
     },
-    [sendMessageMutation]
+    [sendMessageMutation, isValidConversationId]
   );
 
   const createConversationMutation = useMutation({
     mutationFn: async (title: string = 'New Conversation') => {
-      return await apiRequest('POST', '/api/conversations', { title });
+      return await api.createConversation(title);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
@@ -65,8 +75,14 @@ export const useChat = (conversationId: number) => {
   });
 
   const createConversation = useCallback(
-    async (title?: string) => {
-      return await createConversationMutation.mutateAsync(title);
+    async (title: string = 'New Conversation'): Promise<number> => {
+      try {
+        const newConversation = await createConversationMutation.mutateAsync(title);
+        return newConversation.id;
+      } catch (error) {
+        console.error('Failed to create conversation:', error);
+        return 0;
+      }
     },
     [createConversationMutation]
   );

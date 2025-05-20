@@ -180,12 +180,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Format messages for OpenAI API
       const formattedMessages = messages.map(msg => ({
-        role: msg.role,
+        role: msg.role as 'user' | 'assistant' | 'system',
         content: msg.content,
       }));
 
       // Generate AI response
-      const aiResponse = await generateChatResponse(formattedMessages);
+      let aiResponse;
+      try {
+        aiResponse = await generateChatResponse(formattedMessages);
+      } catch (error) {
+        console.error("Failed to generate AI response:", error);
+        aiResponse = "I'm sorry, I'm having trouble processing your request right now. Please try again later.";
+      }
 
       // Save AI response
       const aiMessageData = insertMessageSchema.parse({

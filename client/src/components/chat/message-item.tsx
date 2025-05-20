@@ -27,6 +27,8 @@ const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
 
 // Helper function to format message content with line breaks and lists
 const formatMessageContent = (content: string): string => {
+  if (!content) return '';
+  
   // Replace line breaks with <br> tags
   let formattedContent = content.replace(/\n/g, '<br>');
   

@@ -4,7 +4,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { User, AuthState } from '@/lib/types';
 
 interface AuthContextType extends AuthState {
-  login: () => void;
+  login: (name: string, email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -16,7 +16,7 @@ const initialAuthState: AuthState = {
 
 const AuthContext = createContext<AuthContextType>({
   ...initialAuthState,
-  login: () => {},
+  login: async () => {},
   logout: async () => {},
 });
 
@@ -27,6 +27,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { data, isLoading } = useQuery({
     queryKey: ['/api/auth/user'],
     retry: false,
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (userData: { name: string; email: string }) => {
+      return await apiRequest('POST', '/api/auth/demo-login', userData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    },
+    onError: (error) => {
+      console.error('Login error:', error);
+    },
   });
 
   const logoutMutation = useMutation({
@@ -53,8 +65,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [data, isLoading]);
 
-  const login = () => {
-    window.location.href = '/api/auth/google';
+  const login = async (name: string, email: string) => {
+    if (!name || !email) return;
+    await loginMutation.mutateAsync({ name, email });
   };
 
   const logout = async () => {

@@ -1,13 +1,11 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import passport from "passport";
 import session from "express-session";
 import MemoryStore from "memorystore";
-import { setupGoogleAuth } from "./services/google-auth";
 import { isAuthenticated } from "./middleware/auth";
 import { generateChatResponse, summarizeEmail } from "./services/openai";
-import { insertConversationSchema, insertMessageSchema } from "@shared/schema";
+import { insertConversationSchema, insertMessageSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -25,24 +23,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })
   );
 
-  // Setup Google authentication
-  setupGoogleAuth(app, storage);
-
-  // Auth routes
-  app.get(
-    "/api/auth/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
-  );
-
-  app.get(
-    "/api/auth/google/callback",
-    passport.authenticate("google", {
-      failureRedirect: "/",
-    }),
-    (req, res) => {
-      res.redirect("/");
+  // Add simple authentication middleware
+  app.use((req: Request & { session: any; user?: any; isAuthenticated?: any }, res: Response, next: NextFunction) => {
+    if (req.session && req.session.user) {
+      req.user = req.session.user;
+      req.isAuthenticated = function() { return true; };
+    } else {
+      req.isAuthenticated = function() { return false; };
     }
-  );
+    next();
+  });
+
+  // Simple authentication routes
+  app.post("/api/auth/demo-login", async (req, res) => {
+    try {
+      const { name, email } = req.body;
+
+      if (!name || !email) {
+        return res.status(400).json({ message: "Name and email are required" });
+      }
+
+      // Create or find a user
+      let user = await storage.getUserByGoogleId(email);
+      
+      if (!user) {
+        user = await storage.createUser({
+          googleId: email,
+          name,
+          email,
+          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
+        });
+      } else {
+        await storage.updateUserLastLogin(user.id);
+      }
+
+      // Set user in session
+      (req as any).session.user = user;
+      
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Failed to log in" });
+    }
+  });
 
   app.get("/api/auth/user", (req, res) => {
     if (req.isAuthenticated()) {
@@ -64,13 +95,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/logout", (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Failed to logout" });
-      }
-      res.json({ success: true });
-    });
+  app.post("/api/auth/logout", (req: Request & { session: any }, res) => {
+    req.session.user = null;
+    res.json({ success: true });
   });
 
   // Conversation routes

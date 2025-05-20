@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 
 // Middleware to check if user is authenticated
-export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
+export function isAuthenticated(req: Request & { isAuthenticated?: Function, user?: any }, res: Response, next: NextFunction) {
+  if (req.isAuthenticated && req.isAuthenticated()) {
     return next();
   }
   
@@ -11,8 +11,8 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
 
 // Middleware to check user permissions (optional for future use)
 export function hasPermission(permission: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
+  return (req: Request & { isAuthenticated?: Function }, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
     

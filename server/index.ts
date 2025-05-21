@@ -6,6 +6,24 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add session middleware
+import session from 'express-session';
+import MemoryStore from 'memorystore';
+
+const SessionStore = MemoryStore(session);
+app.use(session({
+  store: new SessionStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  secret: process.env.SESSION_SECRET || 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

@@ -27,7 +27,7 @@ export interface Conversation {
   updatedAt: Date;
 }
 
-export type FeatureType = 'chat' | 'email' | 'documents' | 'calendar';
+export type FeatureType = 'chat' | 'email' | 'documents' | 'calendar' | 'agents';
 
 export interface Feature {
   id: FeatureType;

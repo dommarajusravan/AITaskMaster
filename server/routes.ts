@@ -34,46 +34,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
-  // Simple authentication routes
-  app.post("/api/auth/demo-login", async (req, res) => {
-    try {
-      const { name, email } = req.body;
-
-      if (!name || !email) {
-        return res.status(400).json({ message: "Name and email are required" });
-      }
-
-      // Create or find a user
-      let user = await storage.getUserByGoogleId(email);
-      
-      if (!user) {
-        user = await storage.createUser({
-          googleId: email,
-          name,
-          email,
-          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
-        });
-      } else {
-        await storage.updateUserLastLogin(user.id);
-      }
-
-      // Set user in session
-      (req as any).session.user = user;
-      
-      res.json({
-        success: true,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          picture: user.picture,
-        },
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Failed to log in" });
+  // Google OAuth routes
+  app.get('/api/auth/google', passport.authenticate('google'));
+  
+  app.get('/api/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }),
+    (req, res) => {
+      res.redirect('/');
     }
-  });
+  );
 
   app.get("/api/auth/user", (req, res) => {
     if (req.isAuthenticated()) {

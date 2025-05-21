@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import passport from "passport";
+import { setupGoogleAuth } from "./services/google-auth";
 import { isAuthenticated } from "./middleware/auth";
 import { generateChatResponse, summarizeEmail } from "./services/openai";
 import { insertConversationSchema, insertMessageSchema, insertUserSchema } from "@shared/schema";
@@ -24,15 +26,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Add simple authentication middleware
-  app.use((req: Request & { session: any; user?: any; isAuthenticated?: any }, res: Response, next: NextFunction) => {
-    if (req.session && req.session.user) {
-      req.user = req.session.user;
-      req.isAuthenticated = function() { return true; };
-    } else {
-      req.isAuthenticated = function() { return false; };
-    }
-    next();
-  });
+  // Initialize passport and session
+  app.use(passport.initialize());
+  app.use(passport.session());
+  
+  // Setup Google OAuth
+  setupGoogleAuth(app, storage);
 
   // Google OAuth routes
   app.get('/api/auth/google', passport.authenticate('google'));

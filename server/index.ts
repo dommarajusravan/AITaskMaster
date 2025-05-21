@@ -8,12 +8,14 @@ app.use(express.urlencoded({ extended: false }));
 
 // Add session middleware
 import session from 'express-session';
-import MemoryStore from 'memorystore';
+import pgSession from 'connect-pg-simple';
+import { pool } from './db';
 
-const SessionStore = MemoryStore(session);
+const PostgresStore = pgSession(session);
 app.use(session({
-  store: new SessionStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
+  store: new PostgresStore({
+    pool,
+    tableName: 'session'
   }),
   secret: process.env.SESSION_SECRET || 'keyboard cat',
   resave: false,

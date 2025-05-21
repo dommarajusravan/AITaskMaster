@@ -66,14 +66,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, firstName, lastName } = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
       const user = await storage.createUser({
         email,
-        password: await bcrypt.hash(password, 10),
-        name: email.split('@')[0],
+        password: hashedPassword,
+        firstName,
+        lastName,
+        name: `${firstName} ${lastName}`,
+        googleId: '',
       });
-      req.session.user = user;
-      res.json({ success: true });
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login after registration failed" });
+        }
+        res.json({ success: true, user });
+      });
     } catch (error) {
       res.status(400).json({ message: "Registration failed" });
     }

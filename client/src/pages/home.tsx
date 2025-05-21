@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import GoogleSignInButton from '@/components/auth/google-sign-in-button';
+import EmailAuthForm from '@/components/auth/email-auth-form';
 
 const Home: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();

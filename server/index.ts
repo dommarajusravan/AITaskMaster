@@ -8,14 +8,13 @@ app.use(express.urlencoded({ extended: false }));
 
 // Add session middleware
 import session from 'express-session';
-import pgSession from 'connect-pg-simple';
-import { pool } from './db';
+import SQLiteStore from 'connect-sqlite3';
 
-const PostgresStore = pgSession(session);
+const SqliteStore = SQLiteStore(session);
 app.use(session({
-  store: new PostgresStore({
-    pool,
-    tableName: 'session'
+  store: new SqliteStore({
+    db: 'sessions.db',
+    dir: './'
   }),
   secret: process.env.SESSION_SECRET || 'keyboard cat',
   resave: false,

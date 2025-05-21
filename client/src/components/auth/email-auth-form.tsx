@@ -18,8 +18,9 @@ const EmailAuthForm: React.FC = () => {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       await apiRequest('POST', endpoint, { email, password });
       window.location.reload();
-    } catch (err) {
-      setError('Authentication failed. Please try again.');
+    } catch (err: any) {
+      const message = err?.message || 'Authentication failed. Please try again.';
+      setError(message.includes('401') ? 'Invalid email or password' : message);
     }
   };
 

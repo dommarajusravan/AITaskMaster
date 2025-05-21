@@ -14,13 +14,14 @@ const SqliteStore = SQLiteStore(session);
 app.use(session({
   store: new SqliteStore({
     db: 'sessions.db',
-    dir: './'
+    dir: './',
+    table: 'sessions'
   }),
   secret: process.env.SESSION_SECRET || 'keyboard cat',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));

@@ -1,9 +1,9 @@
 import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// Initialize OpenAI client with the API key from environment
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || "DEFAULT_OPEN_API_KEY" 
+  apiKey: process.env.OPENAI_API_KEY 
 });
 
 // General chat completion function
@@ -23,7 +23,7 @@ export async function generateChatResponse(messages: Array<{role: string, conten
     });
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo", // Using gpt-3.5-turbo model which has higher rate limits
       messages: formattedMessages,
       max_tokens: 500,
     });
@@ -54,7 +54,7 @@ export async function summarizeEmail(emailContent: string): Promise<{
 }> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo", // Using gpt-3.5-turbo model which has higher rate limits
       messages: [
         {
           role: "system",

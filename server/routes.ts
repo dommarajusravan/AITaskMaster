@@ -9,6 +9,7 @@ import { isAuthenticated } from "./middleware/auth";
 import { generateChatResponse, summarizeEmail } from "./services/openai";
 import { insertConversationSchema, insertMessageSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+import bcrypt from "bcrypt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session setup
@@ -29,13 +30,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize passport and session
   app.use(passport.initialize());
   app.use(passport.session());
-  
+
   // Setup Google OAuth
   setupGoogleAuth(app, storage);
 
   // Google OAuth routes
   app.get('/api/auth/google', passport.authenticate('google'));
-  
+
   app.get('/api/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/' }),
     (req, res) => {
@@ -60,6 +61,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isAuthenticated: false,
         user: null,
       });
+    }
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await storage.createUser({
+        email,
+        password: await bcrypt.hash(password, 10),
+        name: email.split('@')[0],
+      });
+      req.session.user = user;
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await storage.getUserByEmail(email);
+
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      req.session.user = user;
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ message: "Login failed" });
     }
   });
 
@@ -145,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get conversation history to provide context
       const messages = await storage.getMessages(conversationId);
-      
+
       // Format messages for OpenAI API
       const formattedMessages = messages.map(msg => ({
         role: msg.role as 'user' | 'assistant' | 'system',

@@ -18,7 +18,18 @@ const Home: React.FC = () => {
           Sign in with your Google account to start chatting with our AI assistant and unlock powerful productivity tools.
         </p>
         {!isAuthenticated && (
-          <GoogleSignInButton className="mx-auto" />
+          <div className="space-y-4">
+            <GoogleSignInButton className="mx-auto" />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              </div>
+            </div>
+            <EmailAuthForm />
+          </div>
         )}
       </div>
     </div>

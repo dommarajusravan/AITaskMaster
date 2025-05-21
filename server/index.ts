@@ -18,11 +18,12 @@ app.use(session({
     table: 'sessions'
   }),
   secret: process.env.SESSION_SECRET || 'keyboard cat',
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
   cookie: { 
     secure: false,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true
   }
 }));
 

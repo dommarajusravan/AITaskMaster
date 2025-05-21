@@ -1,4 +1,3 @@
-// User types
 export interface User {
   id: number;
   name: string;
@@ -12,7 +11,6 @@ export interface AuthState {
   user: User | null;
 }
 
-// Message types
 export interface Message {
   id: number;
   conversationId: number;
@@ -21,7 +19,6 @@ export interface Message {
   createdAt: Date;
 }
 
-// Conversation types
 export interface Conversation {
   id: number;
   userId: number;
@@ -30,7 +27,6 @@ export interface Conversation {
   updatedAt: Date;
 }
 
-// Feature types
 export type FeatureType = 'chat' | 'email' | 'documents' | 'calendar';
 
 export interface Feature {
@@ -40,11 +36,32 @@ export interface Feature {
   path: string;
 }
 
-// Email summary types
 export interface EmailSummary {
   subject: string;
   keyInfo: string;
   actionItems: string[];
   deadline?: string;
   sender?: string;
+}
+
+// New types for AI agents
+export type AgentType = 'chat' | 'email' | 'creative' | 'research' | 'custom';
+
+export interface Agent {
+  id: number;
+  userId: number;
+  name: string;
+  type: AgentType;
+  description: string;
+  systemPrompt: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AgentConfig {
+  id: number;
+  agentId: number;
+  key: string;
+  value: string;
 }

@@ -11,6 +11,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Chat from "@/pages/chat";
 import EmailSummary from "@/pages/email-summary";
+import AgentDashboard from "@/pages/agents";
 import Sidebar from "@/components/layout/sidebar";
 import MobileSidebar from "@/components/layout/mobile-sidebar";
 import Header from "@/components/layout/header";
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/" component={Home} />
                     <Route path="/chat" component={Chat} />
                     <Route path="/email-summary" component={EmailSummary} />
+                    <Route path="/agents" component={AgentDashboard} />
                     <Route component={NotFound} />
                   </Switch>
                 </div>

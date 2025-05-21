@@ -8,6 +8,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLastLogin(id: number): Promise<void>;
   
@@ -51,6 +52,10 @@ export class MemStorage implements IStorage {
       return this.users.get(userId);
     }
     return undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
   }
 
   async createUser(userData: InsertUser): Promise<User> {
